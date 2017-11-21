@@ -1,0 +1,140 @@
+REFF : https://www.youtube.com/watch?v=34aNWGDCQ9E How To Build A Rails 5 App in 57 min
+===================================================
+1. rails new hackernews -d mysql
+2. cd hackernews
+3. git init
+4. git status
+5. git add .
+6. git  commit -am "Ruby Rails 5 App Only 1 Hours"
+7. git checkout -b add_submissions
+8. rails g scaffold submission title:string url:string
+9. rails db:migrate
+10. git status
+11. git add .
+12. git commit -am "
+13. git commit -am "generated submissions"
+14. git checkout master
+15. git merge add_submissions
+16. git checkout -b create_users
+17. buka gemfile, lalu pindahkan package mysql ke group development, 
+sehingga : 
+
+group :development do
+  # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
+  gem 'web-console', '>= 3.3.0'
+  # Use mysql as the database for Active Record
+  gem 'mysql2', '>= 0.3.18', '< 0.5'
+end
+
+18. lalu tambahkan group production juga pada gemfile :
+group :production do
+  gem 'pg'
+end
+19. lalu cek versi ruby
+ruby -v
+- output :
+ruby 2.3.3p222 (2016-11-21 revision 56859) [x64-mingw32]
+
+20. buka gemfile tambahkan versi ruby sesuai cek versi diatas tadi :
+ruby '2.3.3'
+
+sehingga seperti ini persis dibawah source tadi :
+source 'https://rubygems.org'
+ruby '2.3.3'
+
+21. buka gemfile tambahkan package devise dan wdm :
+
+gem 'devise', '~> 4.2'
+gem 'wdm', '>= 0.1.0'
+
+22. buka gemfile tambahkan pada development jquery rails:
+gem 'jquery-rails'
+
+23. buka gemfile tambahkan pada development listen , spring, spring-watcher-listen:
+gem 'listen', '~> 3.0.5'	
+gem 'spring'	
+gem 'spring-watcher-listen', '2.0.0'
+
+sehingga tampak seluruh package seperti ini :
+
+source 'https://rubygems.org'
+ruby '2.3.3'
+
+git_source(:github) do |repo_name|
+  repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
+  "https://github.com/#{repo_name}.git"
+end
+
+gem 'rails', '~> 5.1.4'
+gem 'puma', '~> 3.7'
+gem 'sass-rails', '~> 5.0'
+gem 'uglifier', '>= 1.3.0'
+gem 'coffee-rails', '~> 4.2'
+
+gem 'jquery-rails'
+gem 'turbolinks', '~> 5'
+gem 'jbuilder', '~> 2.5'
+
+gem 'devise', '~> 4.2'
+gem 'wdm', '>= 0.1.0'
+
+group :development, :test do
+  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  gem 'capybara', '~> 2.13'
+  gem 'selenium-webdriver'
+end
+
+group :development do
+  gem 'listen', '~> 3.0.5'	
+  gem 'spring'	
+  gem 'spring-watcher-listen', '2.0.0'
+  gem 'mysql2', '>= 0.3.18', '< 0.5'
+  gem 'web-console', '>= 3.3.0'
+end
+
+group :production do
+  gem 'pg'
+end
+
+gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+24. bundle install / bundle update
+25. rails g devise:install
+26. buka development.rb lalu aktfikan / uncomment baris :
+
+config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+
+dan tambahkan dibawahnya :
+
+config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+27. buka routes.rb tambahkan 
+root 'submissions#index'
+
+28. buka rubyonrails\hackernews\app\views\layouts\application.html.erb tambahkan setelah body :
+
+<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+sehingga : 
+<body>
+<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+29. rails g devise:views
+30. rails g devise User
+31. rails db:migrate
+32. rails s
+33. coba daftarkan user http://localhost:3000/users/sign_up
+jika error cannot load such file -- bcrypt_ext, solusi install native extension bcrypt :
+
+-gem uninstall bcrypt-ruby
+-gem uninstall bcrypt
+-gem install bcrypt --platform=ruby
+
+# setelah itu coba daftar lagi pasti berhasil.
+
+34. rails c / rails console
+
+35. User.All
