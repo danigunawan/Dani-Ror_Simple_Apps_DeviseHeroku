@@ -5,3 +5,6 @@ REFF : https://www.youtube.com/watch?v=34aNWGDCQ9E How To Build A Rails 5 App in
 3. git init
 4. git status
 5. git add .
+6. git  commit -am "Ruby Rails 5 App Only 1 Hours"
+7. git checkout -b add_submissions
+8. 
