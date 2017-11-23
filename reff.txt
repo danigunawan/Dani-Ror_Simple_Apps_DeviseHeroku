@@ -1,4 +1,5 @@
 REFF : https://www.youtube.com/watch?v=34aNWGDCQ9E How To Build A Rails 5 App in 57 min
+https://github.com/ryan-ol/hackernews-course
 ===================================================
 1. rails new hackernews -d mysql
 2. cd hackernews
@@ -228,3 +229,338 @@ create    db/migrate/20171122023523_add_user_id_to_submissions.rb
 45. git status
 46. git add .
 47. git commit -am "Added association between submissions and users"
+48. rails s
+49. mengatasi pada saat membuat submissions baru tidak bisa input "user must exist" karena
+pada sessions user_id belum ada yang aktif jadi kita beri nilai dulu user mana yang aktif, jadi user_id pada table submissions tidak kosong alias diisi nilai user yang
+sedang aktif pada saat tersebut.
+buka controllers submissions_controller.rb
+ubah :
+  # GET /submissions/new
+  def new
+    @submission = Submission.new
+  end
+menjadi :
+
+  # GET /submissions/new
+  def new
+    @submission = current_user.submissions.build
+  end
+
+50. masih pada controllers submissions_controller.rb
+pada method create : 
+
+kita ubah submissionnya juga agar ada nilai sessions yang aktif:
+@submission = Submission.new(submission_params)
+
+menjadi :
+
+@submission = current_user.submissions.build(submission_params)
+
+51. kita cek apakah data tadi terinput pada submissions beserta user_id nya :
+rails c
+Submission.last # Submission nama class pada model submission.rb
+
+52. filter siapa saja yang bisa lihat data submissions
+buka controller submissions_controller.rb tambahkan sesudah before_action :
+before_filter :authenticate_user!, except: [:index, :show]
+
+# ket jika error Undefined method for `before_filter'
+
+solusi :
+before_action :authenticate_user!, except: [:index, :show]
+
+
+53. buka views/submissions/index.html.erb
+
+tambahkan :
+
+  <% if submission.user == current_user %>
+          # ini statement isinya
+        <% end %>
+
+
+sehingga : 
+
+<p id="notice"><%= notice %></p>
+
+<h1>Submissions</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Url</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @submissions.each do |submission| %>
+      <tr>
+        <td><%= submission.title %></td>
+        <td><%= submission.url %></td>
+        <% if submission.user == current_user %>
+          <td><%= link_to 'Show', submission %></td>
+          <td><%= link_to 'Edit', edit_submission_path(submission) %></td>
+          <td><%= link_to 'Destroy', submission, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+54. rails s
+55. git status
+56. git add .
+57. git commit -am "Authorization for submissions"
+58. git checkout -b add_styling
+59. buka gemfile tambahkan bootstrap-sass :
+gem 'bootstrap-sass', '~> 3.3.6'
+
+60. ubah application.css menjadi application.scss di app/assets/styleshyeets/application.scss
+
+lalu buka application.scss lalu tambahkan di line paling bawah :
+
+ @import "bootstrap-sprockets";
+ @import "bootstrap";
+
+61. buka app/assets/javascripts/application.js lalu tambahkan
+//= require jquery
+//= require bootstrap-sprockets
+
+sehingga :
+
+//= require jquery
+//= require bootstrap-sprockets
+//= require rails-ujs
+//= require turbolinks
+//= require_tree .
+
+
+62. hapus scaffolds.scss di H:\laragon\www\rubyonrails\hackernews\app\assets\stylesheets 
+63. cek routes link : 
+rails routes
+
+output :
+
+                  Prefix Verb   URI Pattern                     Controller#Action
+        new_user_session GET    /users/sign_in(.:format)        devise/sessions#new
+            user_session POST   /users/sign_in(.:format)        devise/sessions#create
+    destroy_user_session DELETE /users/sign_out(.:format)       devise/sessions#destroy
+       new_user_password GET    /users/password/new(.:format)   devise/passwords#new
+      edit_user_password GET    /users/password/edit(.:format)  devise/passwords#edit
+           user_password PATCH  /users/password(.:format)       devise/passwords#update
+                         PUT    /users/password(.:format)       devise/passwords#update
+                         POST   /users/password(.:format)       devise/passwords#create
+cancel_user_registration GET    /users/cancel(.:format)         devise/registrations#cancel
+   new_user_registration GET    /users/sign_up(.:format)        devise/registrations#new
+  edit_user_registration GET    /users/edit(.:format)           devise/registrations#edit
+       user_registration PATCH  /users(.:format)                devise/registrations#update
+                         PUT    /users(.:format)                devise/registrations#update
+                         DELETE /users(.:format)                devise/registrations#destroy
+                         POST   /users(.:format)                devise/registrations#create
+             submissions GET    /submissions(.:format)          submissions#index
+                         POST   /submissions(.:format)          submissions#create
+          new_submission GET    /submissions/new(.:format)      submissions#new
+         edit_submission GET    /submissions/:id/edit(.:format) submissions#edit
+              submission GET    /submissions/:id(.:format)      submissions#show
+                         PATCH  /submissions/:id(.:format)      submissions#update
+                         PUT    /submissions/:id(.:format)      submissions#update
+                         DELETE /submissions/:id(.:format)      submissions#destroy
+                    root GET    /                               submissions#index
+
+64. BUKA application.html.erb di views/layouts/application.html.erb
+
+tambahkan pada body : 
+
+<% if user_signed_in? %>
+	<ul>
+		<li><%= link_to "Submit", new_submission_path %></li> 
+		<li><%= link_to "Account", edit_user_registration_path %></li>
+		<li><%= link_to "Sign Out", destroy_user_session_path, :method => :delete %></li>
+	</ul>
+	
+	<% else %>
+	<ul>
+		<li><%= link_to "Sign up", new_user_registration_path %></li>
+		<li><%= link_to "Sign in", new_user_session_path %></li>
+	</ul>
+	<% end %>
+
+# SEHINGGA : 
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hackernews</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+<div id="main" class="container">
+	<header class="navbar navbar-default" role="navigation">
+		<div id="logo" class="navbar-brand"><%= link_to "Hacker News", root_path %></div>
+		<nav class="collapse navbar-collapse navbar ex-1-collapse">
+			<% if user_signed_in? %>
+			<ul class="nav navbar-nav nav navbar-left">
+			<li><%= link_to "submit", new_submission_path %></li>
+			<li><%= link_to "account", edit_user_registration_path %></li>
+		</ul>
+		<ul class="nav navbar-nav navbar-right">
+			<li><%= link_to "logout", destroy_user_session_path %></li>
+		</ul>
+		<% else %>
+			<ul class="nav navbar-nav navbar-right">
+				<li><%= link_to "login", new_user_session_path %></li>
+			</ul>
+		<% end %>
+		</nav>
+	</header>
+
+</div>
+	<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+	<div id="container" class="center-block">
+    <%= yield %>
+	</div>
+  </body>
+</html>
+
+
+
+
+ket : new_submission_path diambil dari value prefix dari routes (rails route) jadi namaprefix_path
+get_upvote_size dari method/def submission
+
+65. buka assets/stylesheets/application.scss
+tambahkan css :
+
+#main.container {
+  background-color: rgb(246, 246, 239);
+  padding: 0;
+  width: 85%;
+}
+
+a {
+  color: #828282;
+}
+
+.post a, .post p {
+  color: #828282;
+  font-size: 12px;
+}
+.post a.title {
+  color: #000000;
+  font-size: 16px;
+}
+
+.navbar {
+  border-radius: 0;
+  height: 30px;
+  min-height: 30px;
+}
+
+.navbar-default {
+  background-color: rgb(255, 102, 0);
+}
+.navbar-default .navbar-nav li a {
+  color: #000000;
+  padding: 0;
+  line-height: 30px;
+  margin-right: 1em;
+}
+.navbar-default .navbar-nav li a:hover {
+  color: #ffffff;
+}
+
+.navbar-brand {
+  padding: 0;
+}
+.navbar-brand a {
+  color: #000000;
+  font-size: 1em;
+  font-weight: 500;
+  padding-left: 5px;
+  line-height: 30px;
+  margin-right: 1em;
+}
+
+table {
+  width: 100%
+}
+
+.fa-lg {
+  color: #828282;
+}
+
+textarea.form-control {
+  width: 500px;
+  height: 100px;
+}
+
+#comments {
+  margin-top: 5em;
+}
+
+.lead {
+  font-size: 14px;
+}
+
+
+66. buka views/submissions/index.html.erb
+
+ubah menjadi :
+<table>
+  <tbody>
+    <% @submissions.each do |submission| %>
+      <tr class="post">
+        <td>
+          <%= link_to like_submission_path(submission), method: :put do %>
+            <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
+          <% end %>
+
+          <%= link_to submission.title, submission.url, class: "title" %>
+          <%= link_to submission.url, "(#{submission.url})", target: "_blank" %>
+        </td>
+        <tr class="post">
+          <td> <p><%= submission.get_upvotes.size %> points by <%= submission.user.email %> <%= time_ago_in_words(submission.created_at) %> ago | <%= link_to "#{submission.comments.count} comments", submission %> </p></td>
+        </tr>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+67. buka views/submissions/show.html.erb
+ganti dengan :
+
+<div class="page-header">
+  <h4>
+    <%= link_to like_submission_path(@submission), method: :put do %>
+      <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
+    <% end %>
+    <%= @submission.title %>
+    <a href="<%= @submission.url %>"><%= @submission.url %></a>
+  </h4>
+  <p><%= @submission.get_upvotes.size %> points by <%= @submission.user.email %> <%= time_ago_in_words(@submission.created_at) %> ago | <%= link_to "#{@submission.comments.count} comments", @submission %> </p>
+  <br>
+
+  <%= simple_form_for [@submission, Comment.new] do |f| %>
+    <%= f.text_area :body, class: "form-control" %>
+    <br>
+    <%= f.submit "add comment" %>
+  <% end %>
+
+  <div id="comments">
+    <%= render :partial => @submission.comments %>
+  </div>
+</div>
+
+68. git status
+git add .
+git commit -am "Added Styling"

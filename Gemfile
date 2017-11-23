@@ -17,6 +17,7 @@ gem 'turbolinks', '~> 5'
 gem 'jbuilder', '~> 2.5'
 
 gem 'devise', '~> 4.2'
+gem 'bootstrap-sass', '~> 3.3.6'
 
 gem 'wdm', '>= 0.1.0'
 
