@@ -991,5 +991,13 @@ heroku rake db:migrate
 heroku open
 
 
-========= JIKA INGIN MIGRATE DATA DI HEROKU ==========
-optional :
+========= JIKA INGIN PUSH JUGA DI GITHUB dan INTEGRASI HEROKU REPO DENGAN GIT ==========
+1. buat project digithub
+2. lalu pada project heroku seting github cari project sesuai dengan project yang dibuat di github tadi lalu connectkan, lalu enable kan automatic deploys
+3. copy link remote project pada github :
+- git init
+- git remote add origin https://github.com/danigunawan/Dani-Ror_Simple_Apps_DeviseHeroku.git
+- git status 
+- git add .
+- git commit -am "deploy heroku and github"
+- git push origin master
