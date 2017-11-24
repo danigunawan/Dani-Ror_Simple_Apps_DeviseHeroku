@@ -980,3 +980,6 @@ pipiline skip aja
 - install heroku windows cli https://devcenter.heroku.com/articles/heroku-cli#windows
 103. pilih Existing Git repository
 heroku git:remote -a dani-appsimplenews
+git add .
+git commit -am "push to heroku"
+git push heroku master
