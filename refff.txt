@@ -980,13 +980,15 @@ pipiline skip aja
 - install heroku windows cli https://devcenter.heroku.com/articles/heroku-cli#windows
 103. pilih Existing Git repository
 heroku git:remote -a dani-appsimplenews
+git init
 git status
 rake assets:precompile
 git add .
 git commit -am "push to heroku"
 git push heroku master
+heroku rake:db migrate
 heroku open
+
 
 ========= JIKA INGIN MIGRATE DATA DI HEROKU ==========
 optional :
-heroku run bundle exec rake db:migrate
