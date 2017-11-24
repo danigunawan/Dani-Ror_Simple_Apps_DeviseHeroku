@@ -7,6 +7,8 @@ https://github.com/ryan-ol/hackernews-course
 4. git status
 5. git add .
 6. git  commit -am "Ruby Rails 5 App Only 1 Hours"
+
+=== BUAT MODUL SUBMISSIONS ===
 7. git checkout -b add_submissions
 8. rails g scaffold submission title:string url:string
 9. rails db:migrate
@@ -564,3 +566,57 @@ ganti dengan :
 68. git status
 git add .
 git commit -am "Added Styling"
+git checkout master
+git merge add_styling
+
+=== BUAT MODULE UP VOTES ===
+69. git checkout -b add_upvotes
+70. buka gemfile
+tambahkan :
+gem 'acts_as_votable', '~> 0.10.0'
+71. bundle install
+72. rails g acts_as_votable:migration
+73. buka file migrasi 20171123163723_acts_as_votable_migration.rb
+jangan lupa active recordnya pada class dikasih versi [5.1] jadi class ActsAsVotableMigration < ActiveRecord::Migration[5.1]
+74. rails db:migrate
+
+75. rails c
+tes database rails dengan ORM rails console : 
+
+ketik :
+@submission = Submission.first
+@user = User.first
+@submission.liked_by @user
+@submission.votes_for.size
+@submission.save
+
+76. buka routes.rb
+ubah restfull resource submission menjadi :
+  resources :submissions do
+  	member do
+  		put "Like", to: "submission#upvote"
+  		put "dislike", to: "submission#downvote"
+  	end
+  end
+
+77. buka controller submissions_controller.rb
+tambahkan method upvote dan downvote :
+
+  def upvote
+    @submission = Submission.find(params[:id])
+    @submission.upvote_by current_user # upvote ini akan dilakukan oleh user itu sendiri yg login    
+    redirect_to :back
+  end
+
+  def downvote
+    @submission = Submission.find(params[:id])
+    @submission.downvote_by current_user # downvote ini akan dilakukan oleh user itu sendiri yg login    
+    redirect_to :back
+  end
+
+78. git status
+git add .
+git commit -am "Added upvote"
+git checkout master
+
+

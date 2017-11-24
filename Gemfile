@@ -20,6 +20,8 @@ gem 'devise', '~> 4.2'
 gem 'bootstrap-sass', '~> 3.3.6'
 gem 'acts_as_votable', '~> 0.10.0'
 gem 'wdm', '>= 0.1.0'
+gem 'simple_form'
+gem 'record_tag_helper', '~> 1.0'
 
 group :development, :test do
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
