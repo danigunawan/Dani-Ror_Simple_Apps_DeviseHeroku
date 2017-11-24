@@ -979,6 +979,7 @@ pipiline skip aja
 - langsung create
 - install heroku windows cli https://devcenter.heroku.com/articles/heroku-cli#windows
 103. pilih Existing Git repository
+# sebelum migrate ke heroku nonaktifkan package gem wdm dengan cara uncomment saja seperti ini #gem 'wdm', '>= 0.1.0'
 heroku git:remote -a dani-appsimplenews
 git init
 git status
@@ -986,7 +987,7 @@ rake assets:precompile
 git add .
 git commit -am "push to heroku"
 git push heroku master
-heroku rake db:migrate
+heroku rake db:migrate 
 heroku open
 
 
