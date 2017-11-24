@@ -1,0 +1,603 @@
+REFF : https://www.youtube.com/watch?v=34aNWGDCQ9E How To Build A Rails 5 App in 57 min
+https://github.com/ryan-ol/hackernews-course
+===================================================
+1. rails new hackernews -d mysql
+2. cd hackernews
+3. git init
+4. git status
+5. git add .
+6. git  commit -am "Ruby Rails 5 App Only 1 Hours"
+
+=== BUAT MODUL SUBMISSIONS ===
+7. git checkout -b add_submissions
+8. rails g scaffold submission title:string url:string
+9. rails db:migrate
+10. git status
+11. git add .
+12. git commit -am "
+13. git commit -am "generated submissions"
+14. git checkout master
+15. git merge add_submissions
+16. git checkout -b create_users
+17. buka gemfile, lalu pindahkan package mysql ke group development, 
+sehingga : 
+
+group :development do
+  # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
+  gem 'web-console', '>= 3.3.0'
+  # Use mysql as the database for Active Record
+  gem 'mysql2', '>= 0.3.18', '< 0.5'
+end
+
+18. lalu tambahkan group production juga pada gemfile :
+group :production do
+  gem 'pg'
+end
+19. lalu cek versi ruby
+ruby -v
+- output :
+ruby 2.3.3p222 (2016-11-21 revision 56859) [x64-mingw32]
+
+20. buka gemfile tambahkan versi ruby sesuai cek versi diatas tadi :
+ruby '2.3.3'
+
+sehingga seperti ini persis dibawah source tadi :
+source 'https://rubygems.org'
+ruby '2.3.3'
+
+21. buka gemfile tambahkan package devise dan wdm :
+
+gem 'devise', '~> 4.2'
+gem 'wdm', '>= 0.1.0'
+
+22. buka gemfile tambahkan pada development jquery rails:
+gem 'jquery-rails'
+
+23. buka gemfile tambahkan pada development listen , spring, spring-watcher-listen:
+gem 'listen', '~> 3.0.5'	
+gem 'spring'	
+gem 'spring-watcher-listen', '2.0.0'
+
+sehingga tampak seluruh package seperti ini :
+
+source 'https://rubygems.org'
+ruby '2.3.3'
+
+git_source(:github) do |repo_name|
+  repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
+  "https://github.com/#{repo_name}.git"
+end
+
+gem 'rails', '~> 5.1.4'
+gem 'puma', '~> 3.7'
+gem 'sass-rails', '~> 5.0'
+gem 'uglifier', '>= 1.3.0'
+gem 'coffee-rails', '~> 4.2'
+
+gem 'jquery-rails'
+gem 'turbolinks', '~> 5'
+gem 'jbuilder', '~> 2.5'
+
+gem 'devise', '~> 4.2'
+gem 'wdm', '>= 0.1.0'
+
+group :development, :test do
+  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  gem 'capybara', '~> 2.13'
+  gem 'selenium-webdriver'
+end
+
+group :development do
+  gem 'listen', '~> 3.0.5'	
+  gem 'spring'	
+  gem 'spring-watcher-listen', '2.0.0'
+  gem 'mysql2', '>= 0.3.18', '< 0.5'
+  gem 'web-console', '>= 3.3.0'
+end
+
+group :production do
+  gem 'pg'
+end
+
+gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+24. bundle install / bundle update
+25. rails g devise:install
+26. buka development.rb lalu aktfikan / uncomment baris :
+
+config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+
+dan tambahkan dibawahnya :
+
+config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+27. buka routes.rb tambahkan 
+root 'submissions#index'
+
+28. buka rubyonrails\hackernews\app\views\layouts\application.html.erb tambahkan setelah body :
+
+<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+sehingga : 
+<body>
+<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+29. rails g devise:views
+30. rails g devise User
+31. rails db:migrate
+32. rails s
+33. coba daftarkan user http://localhost:3000/users/sign_up
+jika error cannot load such file -- bcrypt_ext, solusi install native extension bcrypt :
+
+-gem uninstall bcrypt-ruby
+-gem uninstall bcrypt
+-gem install bcrypt --platform=ruby
+
+# setelah itu coba daftar lagi pasti berhasil.
+
+34. rails c / rails console
+
+35. User.All
+36. git status
+37. git add .
+38. git commit -am "Add Users with Devise"
+39.  buka views/layouts/application.html.erb tambahkan setelah flash :
+
+<% if user_signed_in? %>
+	<ul>
+		<li><%= link_to "Submit", new_submission_path %></li>
+		<li><%= link_to "Account", edit_user_registration_path %></li>
+		<li><%= link_to "Sign Out", destroy_user_session_path, :method => :delete %></li>
+	</ul>
+	
+	<% else %>
+	<ul>
+		<li><%= link_to "Sign up", new_user_registration_path %></li>
+		<li><%= link_to "Sign in", new_user_session_path %></li>
+	</ul>
+	<% end %>
+
+sehingga :
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hackernews</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+	<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+	<% if user_signed_in? %>
+	<ul>
+		<li><%= link_to "Submit", new_submission_path %></li>
+		<li><%= link_to "Account", edit_user_registration_path %></li>
+		<li><%= link_to "Sign Out", destroy_user_session_path, :method => :delete %></li>
+	</ul>
+	
+	<% else %>
+	<ul>
+		<li><%= link_to "Sign up", new_user_registration_path %></li>
+		<li><%= link_to "Sign in", new_user_session_path %></li>
+	</ul>
+	<% end %>
+
+    <%= yield %>
+  </body>
+</html>
+
+40. buka model user.rb (user -> has_many (submission) user punya banyak submission)
+tambahkan : 
+
+has_many :submissions
+
+sehingga : 
+
+class User < ApplicationRecord
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable
+
+  has_many :submissions
+end
+
+41. buka model submissions.rb (submissions -> belongsto (user) submission bagian dari atau punya satu user)
+tambahkan : 
+belongs_to :user
+
+sehingga : 
+class Submission < ApplicationRecord
+	belongs_to :user
+end
+
+42. buat migrasi menambahkan field/kolom user_id beserta index di table submissions
+rails g migration add_user_id_to_submissions user_id:integer:index
+
+output :
+invoke  active_record
+create    db/migrate/20171122023523_add_user_id_to_submissions.rb
+
+44. rails db:migrate
+45. git status
+46. git add .
+47. git commit -am "Added association between submissions and users"
+48. rails s
+49. mengatasi pada saat membuat submissions baru tidak bisa input "user must exist" karena
+pada sessions user_id belum ada yang aktif jadi kita beri nilai dulu user mana yang aktif, jadi user_id pada table submissions tidak kosong alias diisi nilai user yang
+sedang aktif pada saat tersebut.
+buka controllers submissions_controller.rb
+ubah :
+  # GET /submissions/new
+  def new
+    @submission = Submission.new
+  end
+menjadi :
+
+  # GET /submissions/new
+  def new
+    @submission = current_user.submissions.build
+  end
+
+50. masih pada controllers submissions_controller.rb
+pada method create : 
+
+kita ubah submissionnya juga agar ada nilai sessions yang aktif:
+@submission = Submission.new(submission_params)
+
+menjadi :
+
+@submission = current_user.submissions.build(submission_params)
+
+51. kita cek apakah data tadi terinput pada submissions beserta user_id nya :
+rails c
+Submission.last # Submission nama class pada model submission.rb
+
+52. filter siapa saja yang bisa lihat data submissions
+buka controller submissions_controller.rb tambahkan sesudah before_action :
+before_filter :authenticate_user!, except: [:index, :show]
+
+# ket jika error Undefined method for `before_filter'
+
+solusi :
+before_action :authenticate_user!, except: [:index, :show]
+
+
+53. buka views/submissions/index.html.erb
+
+tambahkan :
+
+  <% if submission.user == current_user %>
+          # ini statement isinya
+        <% end %>
+
+
+sehingga : 
+
+<p id="notice"><%= notice %></p>
+
+<h1>Submissions</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Url</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @submissions.each do |submission| %>
+      <tr>
+        <td><%= submission.title %></td>
+        <td><%= submission.url %></td>
+        <% if submission.user == current_user %>
+          <td><%= link_to 'Show', submission %></td>
+          <td><%= link_to 'Edit', edit_submission_path(submission) %></td>
+          <td><%= link_to 'Destroy', submission, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+54. rails s
+55. git status
+56. git add .
+57. git commit -am "Authorization for submissions"
+58. git checkout -b add_styling
+59. buka gemfile tambahkan bootstrap-sass :
+gem 'bootstrap-sass', '~> 3.3.6'
+
+60. ubah application.css menjadi application.scss di app/assets/styleshyeets/application.scss
+
+lalu buka application.scss lalu tambahkan di line paling bawah :
+
+ @import "bootstrap-sprockets";
+ @import "bootstrap";
+
+61. buka app/assets/javascripts/application.js lalu tambahkan
+//= require jquery
+//= require bootstrap-sprockets
+
+sehingga :
+
+//= require jquery
+//= require bootstrap-sprockets
+//= require rails-ujs
+//= require turbolinks
+//= require_tree .
+
+
+62. hapus scaffolds.scss di H:\laragon\www\rubyonrails\hackernews\app\assets\stylesheets 
+63. cek routes link : 
+rails routes
+
+output :
+
+                  Prefix Verb   URI Pattern                     Controller#Action
+        new_user_session GET    /users/sign_in(.:format)        devise/sessions#new
+            user_session POST   /users/sign_in(.:format)        devise/sessions#create
+    destroy_user_session DELETE /users/sign_out(.:format)       devise/sessions#destroy
+       new_user_password GET    /users/password/new(.:format)   devise/passwords#new
+      edit_user_password GET    /users/password/edit(.:format)  devise/passwords#edit
+           user_password PATCH  /users/password(.:format)       devise/passwords#update
+                         PUT    /users/password(.:format)       devise/passwords#update
+                         POST   /users/password(.:format)       devise/passwords#create
+cancel_user_registration GET    /users/cancel(.:format)         devise/registrations#cancel
+   new_user_registration GET    /users/sign_up(.:format)        devise/registrations#new
+  edit_user_registration GET    /users/edit(.:format)           devise/registrations#edit
+       user_registration PATCH  /users(.:format)                devise/registrations#update
+                         PUT    /users(.:format)                devise/registrations#update
+                         DELETE /users(.:format)                devise/registrations#destroy
+                         POST   /users(.:format)                devise/registrations#create
+             submissions GET    /submissions(.:format)          submissions#index
+                         POST   /submissions(.:format)          submissions#create
+          new_submission GET    /submissions/new(.:format)      submissions#new
+         edit_submission GET    /submissions/:id/edit(.:format) submissions#edit
+              submission GET    /submissions/:id(.:format)      submissions#show
+                         PATCH  /submissions/:id(.:format)      submissions#update
+                         PUT    /submissions/:id(.:format)      submissions#update
+                         DELETE /submissions/:id(.:format)      submissions#destroy
+                    root GET    /                               submissions#index
+
+64. BUKA application.html.erb di views/layouts/application.html.erb
+
+tambahkan pada body : 
+
+<% if user_signed_in? %>
+	<ul>
+		<li><%= link_to "Submit", new_submission_path %></li> 
+		<li><%= link_to "Account", edit_user_registration_path %></li>
+		<li><%= link_to "Sign Out", destroy_user_session_path, :method => :delete %></li>
+	</ul>
+	
+	<% else %>
+	<ul>
+		<li><%= link_to "Sign up", new_user_registration_path %></li>
+		<li><%= link_to "Sign in", new_user_session_path %></li>
+	</ul>
+	<% end %>
+
+# SEHINGGA : 
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hackernews</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+<div id="main" class="container">
+	<header class="navbar navbar-default" role="navigation">
+		<div id="logo" class="navbar-brand"><%= link_to "Hacker News", root_path %></div>
+		<nav class="collapse navbar-collapse navbar ex-1-collapse">
+			<% if user_signed_in? %>
+			<ul class="nav navbar-nav nav navbar-left">
+			<li><%= link_to "submit", new_submission_path %></li>
+			<li><%= link_to "account", edit_user_registration_path %></li>
+		</ul>
+		<ul class="nav navbar-nav navbar-right">
+			<li><%= link_to "logout", destroy_user_session_path %></li>
+		</ul>
+		<% else %>
+			<ul class="nav navbar-nav navbar-right">
+				<li><%= link_to "login", new_user_session_path %></li>
+			</ul>
+		<% end %>
+		</nav>
+	</header>
+
+</div>
+	<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+	<div id="container" class="center-block">
+    <%= yield %>
+	</div>
+  </body>
+</html>
+
+
+
+
+ket : new_submission_path diambil dari value prefix dari routes (rails route) jadi namaprefix_path
+get_upvote_size dari method/def submission
+
+65. buka assets/stylesheets/application.scss
+tambahkan css :
+
+#main.container {
+  background-color: rgb(246, 246, 239);
+  padding: 0;
+  width: 85%;
+}
+
+a {
+  color: #828282;
+}
+
+.post a, .post p {
+  color: #828282;
+  font-size: 12px;
+}
+.post a.title {
+  color: #000000;
+  font-size: 16px;
+}
+
+.navbar {
+  border-radius: 0;
+  height: 30px;
+  min-height: 30px;
+}
+
+.navbar-default {
+  background-color: rgb(255, 102, 0);
+}
+.navbar-default .navbar-nav li a {
+  color: #000000;
+  padding: 0;
+  line-height: 30px;
+  margin-right: 1em;
+}
+.navbar-default .navbar-nav li a:hover {
+  color: #ffffff;
+}
+
+.navbar-brand {
+  padding: 0;
+}
+.navbar-brand a {
+  color: #000000;
+  font-size: 1em;
+  font-weight: 500;
+  padding-left: 5px;
+  line-height: 30px;
+  margin-right: 1em;
+}
+
+table {
+  width: 100%
+}
+
+.fa-lg {
+  color: #828282;
+}
+
+textarea.form-control {
+  width: 500px;
+  height: 100px;
+}
+
+#comments {
+  margin-top: 5em;
+}
+
+.lead {
+  font-size: 14px;
+}
+
+
+66. buka views/submissions/index.html.erb
+
+ubah menjadi :
+<table>
+  <tbody>
+    <% @submissions.each do |submission| %>
+      <tr class="post">
+        <td>
+          <%= link_to like_submission_path(submission), method: :put do %>
+            <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
+          <% end %>
+
+          <%= link_to submission.title, submission.url, class: "title" %>
+          <%= link_to submission.url, "(#{submission.url})", target: "_blank" %>
+        </td>
+        <tr class="post">
+          <td> <p><%= submission.get_upvotes.size %> points by <%= submission.user.email %> <%= time_ago_in_words(submission.created_at) %> ago | <%= link_to "#{submission.comments.count} comments", submission %> </p></td>
+        </tr>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+67. buka views/submissions/show.html.erb
+ganti dengan :
+
+<div class="page-header">
+  <h4>
+    <%= link_to like_submission_path(@submission), method: :put do %>
+      <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
+    <% end %>
+    <%= @submission.title %>
+    <a href="<%= @submission.url %>"><%= @submission.url %></a>
+  </h4>
+  <p><%= @submission.get_upvotes.size %> points by <%= @submission.user.email %> <%= time_ago_in_words(@submission.created_at) %> ago | <%= link_to "#{@submission.comments.count} comments", @submission %> </p>
+  <br>
+
+  <%= simple_form_for [@submission, Comment.new] do |f| %>
+    <%= f.text_area :body, class: "form-control" %>
+    <br>
+    <%= f.submit "add comment" %>
+  <% end %>
+
+  <div id="comments">
+    <%= render :partial => @submission.comments %>
+  </div>
+</div>
+
+68. git status
+git add .
+git commit -am "Added Styling"
+git checkout master
+git merge add_styling
+
+=== BUAT MODULE UP VOTES ===
+69. git checkout -b add_upvotes
+70. buka gemfile
+tambahkan :
+gem 'acts_as_votable', '~> 0.10.0'
+71. bundle install
+72. rails g acts_as_votable:migration
+73. buka file migrasi 20171123163723_acts_as_votable_migration.rb
+jangan lupa active recordnya pada class dikasih versi [5.1] jadi class ActsAsVotableMigration < ActiveRecord::Migration[5.1]
+74. rails db:migrate
+
+75. rails c
+tes database rails dengan ORM rails console : 
+
+ketik :
+@submission = Submission.first
+@user = User.first
+@submission.liked_by @user
+@submission.votes_for.size
+@submission.save
+
+76. buka routes.rb
+ubah restfull resource submission menjadi :
+  resources :submissions do
+  	member do
+  		put "Like", to: "submission#upvote"
+  		put "dislike", to: "submission#downvote"
+  	end
+  end
+
+77. buka controller submissions_controller.rb
+
