@@ -1,5 +1,6 @@
 REFF : https://www.youtube.com/watch?v=34aNWGDCQ9E How To Build A Rails 5 App in 57 min
 https://github.com/ryan-ol/hackernews-course
+https://github.com/ryanto/acts_as_votable
 ===================================================
 1. rails new hackernews -d mysql
 2. cd hackernews
@@ -8,7 +9,7 @@ https://github.com/ryan-ol/hackernews-course
 5. git add .
 6. git  commit -am "Ruby Rails 5 App Only 1 Hours"
 
-=== BUAT MODUL SUBMISSIONS ===
+=== BUAT MODUL SUBMISSIONS DAN USER ===
 7. git checkout -b add_submissions
 8. rails g scaffold submission title:string url:string
 9. rails db:migrate
@@ -125,6 +126,8 @@ sehingga :
 <% flash.each do|name, msg| %>
 		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
 	<% end %>
+
+
 29. rails g devise:views
 30. rails g devise User
 31. rails db:migrate
@@ -138,7 +141,7 @@ jika error cannot load such file -- bcrypt_ext, solusi install native extension 
 
 # setelah itu coba daftar lagi pasti berhasil.
 
-34. rails c / rails console
+34. rails c / rails console / irb
 
 35. User.All
 36. git status
@@ -438,6 +441,7 @@ tambahkan pada body :
 
 
 ket : new_submission_path diambil dari value prefix dari routes (rails route) jadi namaprefix_path
+
 get_upvote_size dari method/def submission
 
 65. buka assets/stylesheets/application.scss
@@ -523,8 +527,8 @@ ubah menjadi :
     <% @submissions.each do |submission| %>
       <tr class="post">
         <td>
-          <%= link_to like_submission_path(submission), method: :put do %>
-            <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
+          <%= link_to like_submission_path(submission), method: :put do %> # pada ruby 2.3.3 tidak bisa like_submission_path harus like_submission_path Case Sensitive
+             <i class="fa fa-caret-up fa-lg " aria-hidden="true"></i>
           <% end %>
 
           <%= link_to submission.title, submission.url, class: "title" %>
@@ -569,7 +573,7 @@ git commit -am "Added Styling"
 git checkout master
 git merge add_styling
 
-=== BUAT MODULE UP VOTES ===
+================ BUAT MODULE UP VOTES ============
 69. git checkout -b add_upvotes
 70. buka gemfile
 tambahkan :
@@ -594,8 +598,8 @@ ketik :
 ubah restfull resource submission menjadi :
   resources :submissions do
   	member do
-  		put "Like", to: "submission#upvote"
-  		put "dislike", to: "submission#downvote"
+  		put "Like", to: "submissions#upvote"
+  		put "dislike", to: "submissions#downvote"
   	end
   end
 
@@ -618,5 +622,361 @@ tambahkan method upvote dan downvote :
 git add .
 git commit -am "Added upvote"
 git checkout master
+git merge add_upvotes
+===================== END MODUL VOTES ===================
+
+===================== BUAT MODUL COMMENT =================
+79. git checkout -b add_comments
+
+80. rails g scaffold Comment submission_id:integer:index body:text user:references --skip-stylesheets # --skup-stylesheets artinya tidak membuat asset stylesheet juga untuk modul comment
+ 
+output :
+
+     invoke  active_record
+      create    db/migrate/20171124054306_create_comments.rb
+      create    app/models/comment.rb
+      invoke    test_unit
+      create      test/models/comment_test.rb
+      create      test/fixtures/comments.yml
+      invoke  resource_route
+       route    resources :comments
+      invoke  scaffold_controller
+      create    app/controllers/comments_controller.rb
+      invoke    erb
+      create      app/views/comments
+      create      app/views/comments/index.html.erb
+      create      app/views/comments/edit.html.erb
+      create      app/views/comments/show.html.erb
+      create      app/views/comments/new.html.erb
+      create      app/views/comments/_form.html.erb
+      invoke    test_unit
+      create      test/controllers/comments_controller_test.rb
+      invoke    helper
+      create      app/helpers/comments_helper.rb
+      invoke      test_unit
+      invoke    jbuilder
+      create      app/views/comments/index.json.jbuilder
+      create      app/views/comments/show.json.jbuilder
+      create      app/views/comments/_comment.json.jbuilder
+      invoke  test_unit
+      create    test/system/comments_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/comments.coffee
+      invoke    scss
+81. rails db:migrate
+ket : setelah migrate otomatis akan masuk dalam db schema.rb ruby
+
+82. buka models submission.rb
+tambahkan : 
+
+has_many :comments
+
+83. buka models comment.rb 
+
+tambahkan :
+
+belongs_to :submission
+
+84. buka routes.rb
+
+ubah posisi resources :comments menjadi setelah resources :submissions , sehingga : 
+
+Rails.application.routes.draw do
+  
+  devise_for :users
+  resources :submissions do
+  	member do
+  		put "Like", to: "submission#upvote"
+  		put "dislike", to: "submission#downvote"
+  	end
+  	resources :comments
+  end
+  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+  root 'submissions#index'
+end
+
+# Kita Akan Membuat Simple Form Untuk Controller Comment
+85. buka controller comments_controller.rb
+
+ubah menjadi seperti ini :
+
+class CommentsController < ApplicationController
+  before_action :set_comment, only: [:show, :edit, :update, :destroy]
+
+  # POST /comments
+  # POST /comments.json
+  def create
+    @submission = Submission.find(params[:submission_id])
+    @comment = @submission.comments.new(comment_params)
+    @comment.user = current_user
+
+    respond_to do |format|
+      if @comment.save
+        format.html { redirect_to @submission, notice: 'Comment was successfully created.' }
+        
+      else
+        format.html { render :new }
+       end
+    end
+  end
 
 
+  # DELETE /comments/1
+  # DELETE /comments/1.json
+  def destroy
+    @comment.destroy
+    respond_to do |format|
+      format.html { redirect_to comments_url, notice: 'Comment was successfully destroyed.' }
+      format.json { head :no_content }
+    end
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_comment
+      @comment = Comment.find(params[:id])
+    end
+
+    # Never trust parameters from the scary internet, only allow the white list through.
+    def comment_params
+      params.require(:comment).permit(:submission_id, :body, :user_id)
+    end
+end
+
+86. buka gemfile 
+tambahkan :
+
+gem 'simple_form'
+
+87. bundle install
+
+88. rails g simple_form:install
+
+output : 
+
+      create  config/initializers/simple_form.rb
+       exist  config/locales
+      create  config/locales/simple_form.en.yml
+      create  lib/templates/erb/scaffold/_form.html.erb
+
+89. tambahkan _comment.html.erb pada views/comments
+lalu isi dari _comment.html.erb :
+
+<%= div_for(comment) do %>
+  <div class="comments-wrapper clearfix">
+    <div class="null-left">
+      <p><small> <%= comment.user.email %> <strong><%= time_ago_in_words(comment.created_at) %></strong> ago </small></p>
+      <p class="lead"><%= comment.body %></p>
+    </div>
+  </div>
+
+  <% if comment.user == current_user %>
+    <%= link_to 'delete', comment, method: :delete, data: { confirm: 'are you sure?'} %>
+  <% end %>
+<% end %>
+
+90. buka gemfile tambahkan :
+gem 'record_tag_helper', '~> 1.0'
+
+91. bundle install
+
+92. git status
+git add .
+git commit -am "Added Comments"
+git checkout master
+git merge add_comments
+
+93. rails s
+94. buka views/layouts/application.html.erb
+copy link fontawesome cdn cari digoogle
+terus tambahkan fontawesome link css:
+
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+
+
+sehingga :
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hackernews</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+  </head>
+
+  <body>
+<div id="main" class="container">
+	<header class="navbar navbar-default" role="navigation">
+		<div id="logo" class="navbar-brand"><%= link_to "Hacker News", root_path %></div>
+		<nav class="collapse navbar-collapse navbar ex-1-collapse">
+			<% if user_signed_in? %>
+			<ul class="nav navbar-nav nav navbar-left">
+			<li><%= link_to "submit", new_submission_path %></li>
+			<li><%= link_to "account", edit_user_registration_path %></li>
+		</ul>
+		<ul class="nav navbar-nav navbar-right">
+			<li><%= link_to "logout", destroy_user_session_path %></li>
+		</ul>
+		<% else %>
+			<ul class="nav navbar-nav navbar-right">
+				<li><%= link_to "login", new_user_session_path %></li>
+			</ul>
+		<% end %>
+		</nav>
+	</header>
+
+	<% flash.each do|name, msg| %>
+		<%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+	<% end %>
+
+	<div id="container" class="center-block">
+    <%= yield %>
+	</div>
+</div>
+  </body>
+</html>
+
+95. rails s
+96. buka controller submisson_controller.rb
+ubah dari :
+
+ def index
+    @submissions = Submission.all
+  end
+
+menjadi :
+
+  def index
+    @submissions = Submission.order(cached_votes_total: :desc)
+  end
+
+97. buat migrasi untuk tambah field/kolom modul votes di table submissions
+
+rails g migration add_cached_votes_to_submissions
+
+output :
+
+   invoke  active_record
+      create    db/migrate/20171124102314_add_cached_votes_to_submissions.rb
+
+98. buka file migrasi 20171124102314_add_cached_votes_to_submissions.rb
+
+lalu tambahkan migrasi untuk modul cache didapat dari library https://github.com/ryanto/acts_as_votable :
+
+sehingga :
+
+class AddCachedVotesToSubmissions < ActiveRecord::Migration[5.1]
+    def up
+    add_column :submissions, :cached_votes_total, :integer, :default => 0
+    add_column :submissions, :cached_votes_score, :integer, :default => 0
+    add_column :submissions, :cached_votes_up, :integer, :default => 0
+    add_column :submissions, :cached_votes_down, :integer, :default => 0
+    add_column :submissions, :cached_weighted_score, :integer, :default => 0
+    add_column :submissions, :cached_weighted_total, :integer, :default => 0
+    add_column :submissions, :cached_weighted_average, :float, :default => 0.0
+    add_index  :submissions, :cached_votes_total
+    add_index  :submissions, :cached_votes_score
+    add_index  :submissions, :cached_votes_up
+    add_index  :submissions, :cached_votes_down
+    add_index  :submissions, :cached_weighted_score
+    add_index  :submissions, :cached_weighted_total
+    add_index  :submissions, :cached_weighted_average
+
+    # Uncomment this line to force caching of existing votes
+    # Post.find_each(&:update_cached_votes)
+  end
+  
+  def down
+    remove_column :submissions, :cached_votes_total
+    remove_column :submissions, :cached_votes_score
+    remove_column :submissions, :cached_votes_up
+    remove_column :submissions, :cached_votes_down
+    remove_column :submissions, :cached_weighted_score
+    remove_column :submissions, :cached_weighted_total
+    remove_column :submissions, :cached_weighted_average
+  end
+end
+
+99. rails db:migrate
+100. rails s
+101. coba login dan logout 
+
+jika logout  error : No route matches [GET] "/users/sign_out"
+
+solusi :
+kita belum memasukan method delete pada prefix destroy_user_session link logout di application.html.erb :
+
+<li><%= link_to "logout", destroy_user_session_path %></li>
+
+- coba scan routes dan cari prefix destroy_user_session method delete : rails routes
+
+destroy_user_session DELETE /users/sign_out(.:format)   devise/sessions#destr
+
+- ubah menjadi :
+<li><%= link_to "logout", destroy_user_session_path, :method => :delete %></li>
+
+####### sehingga keseluruhan application.html.erb :
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hackernews</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+
+  </head>
+
+  <body>
+
+
+    <div id="main" class="container">
+      <header class="navbar navbar-default" role="navigation">
+
+        <div id="logo" class="navbar-brand"><%= link_to "Hacker News", root_path %></div>
+        <nav class="collapse navbar-collapse navbar-ex-1-collapse">
+          <% if user_signed_in? %>
+          <ul class="nav navbar-nav navbar-left">
+            <li><%= link_to "submit", new_submission_path %></li>
+            <li><%= link_to "account", edit_user_registration_path %></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><%= link_to "logout", destroy_user_session_path, :method => :delete %></li>
+          </ul>
+
+          <% else %>
+          <ul class="nav navbar-nav pull-right">
+            <li><%= link_to "login", new_user_session_path %></li>
+          </ul>
+          <% end %>
+        </nav>
+
+      </header>
+
+      <% flash.each do |name, msg| %>
+        <%= content_tag(:div, msg, class: "alert alert-#{name}") %>
+      <% end %>
+
+      <div id="container" class="center-block">
+        <%= yield %>
+      </div>
+    </div>
+  </body>
+</html>
+
+========== DEPLOY HEROKU ===============
+102. buka heroku dan deploy keheroku
+- create app
+app name : terserah
+runtime selection : english
+pipiline skip aja
+- langsung create
+- install heroku windows cli https://devcenter.heroku.com/articles/heroku-cli#windows
+103. pilih Existing Git repository
+heroku git:remote -a dani-appsimplenews
