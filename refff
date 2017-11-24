@@ -981,6 +981,7 @@ pipiline skip aja
 103. pilih Existing Git repository
 heroku git:remote -a dani-appsimplenews
 git status
+rake assets:precompile
 git add .
 git commit -am "push to heroku"
 git push heroku master

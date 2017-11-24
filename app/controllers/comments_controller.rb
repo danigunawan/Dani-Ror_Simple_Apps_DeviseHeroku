@@ -11,12 +11,12 @@ class CommentsController < ApplicationController
     respond_to do |format|
       if @comment.save
         format.html { redirect_to @submission, notice: 'Comment was successfully created.' }
-        
       else
         format.html { render :new }
-       end
+      end
     end
   end
+
 
 
   # DELETE /comments/1

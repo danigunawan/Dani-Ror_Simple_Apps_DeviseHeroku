@@ -1,5 +1,5 @@
-class AddCachedVotesToSubmissions < ActiveRecord::Migration[5.1]
-    def up
+class AddCachedVotesToSubmissions < ActiveRecord::Migration[5.0]
+  def up
     add_column :submissions, :cached_votes_total, :integer, :default => 0
     add_column :submissions, :cached_votes_score, :integer, :default => 0
     add_column :submissions, :cached_votes_up, :integer, :default => 0
@@ -18,7 +18,7 @@ class AddCachedVotesToSubmissions < ActiveRecord::Migration[5.1]
     # Uncomment this line to force caching of existing votes
     # Post.find_each(&:update_cached_votes)
   end
-  
+
   def down
     remove_column :submissions, :cached_votes_total
     remove_column :submissions, :cached_votes_score
